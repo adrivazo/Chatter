@@ -142,10 +142,20 @@
                     <view key="view" contentMode="scaleToFill" id="4cr-xk-ACF">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" id="tOJ-8l-Tgk">
+                                <rect key="frame" x="40" y="101" width="240" height="430"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <animations/>
+                            </mapView>
+                        </subviews>
                         <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <navigationItem key="navigationItem" id="pqZ-Ch-WQU"/>
+                    <connections>
+                        <outlet property="mapView" destination="tOJ-8l-Tgk" id="mRa-jc-LDx"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="HWj-QA-Smo" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

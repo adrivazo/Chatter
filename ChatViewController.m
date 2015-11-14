@@ -7,6 +7,7 @@
 //
 
 #import "ChatViewController.h"
+#import "MapViewController.h"
 
 #import "ParseDataManager.h"
 #import <Parse/Parse.h>
@@ -16,6 +17,7 @@
 @property (strong, nonatomic) JSQMessagesBubbleImage *outgoingBubbleImageData;
 @property (strong, nonatomic) JSQMessagesBubbleImage *incomingBubbleImageData;
 @property(nonatomic) ParseDataManager *dataManager;
+@property(nonatomic, weak) JSQMessage *tappedMessage;
 @end
 
 @implementation ChatViewController
@@ -51,9 +53,6 @@
                                                 repeats:YES];
         [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 
-        
-        
-        //NSLog(@"%@ deleted");
     } else {
         // show the signup or login screen
         //perform segue programatically
@@ -63,8 +62,6 @@
 }
 
 //add a timer to load data every so often...
-
-
 
 - (void)viewDidAppear:(BOOL)animated {
   [super viewDidAppear:animated];
@@ -84,13 +81,11 @@
                   senderId:(NSString *)senderId
          senderDisplayName:(NSString *)senderDisplayName
                       date:(NSDate *)date {
-    
     NSLog(@"Sending message %@", text);
-  // TODO - Handle the passing of data from this method to the
-    
+
+    //TODO get real location
     NSNumber *latitude = @75;
     NSNumber *longitude = @75;
-    
     
     [_dataManager postMessageText:text
                          senderId:senderId
@@ -108,8 +103,63 @@
 }
 
 - (void)collectionView:(JSQMessagesCollectionView *)collectionView didTapMessageBubbleAtIndexPath:(NSIndexPath *)indexPath {
+    //get the latitude and longitude by querying parse with
+    //sender id and created at
+    
+    
+    _tappedMessage= [self.chatData objectAtIndex:indexPath.item];
+
+    
+      [self performSegueWithIdentifier:@"mapSegue" sender:self];
+    //force a segue
+    
  // TODO: Handle what happens when a user selects a cell. It should segue to the MapViewController and display the location
   // Of the message sent.
+}
+
+- (void) prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender{
+
+    if([[segue identifier] isEqualToString:@"mapSegue"]){
+        
+        
+        // Get destination view
+        MapViewController *vc = [segue destinationViewController];
+        
+        //should move this to the parse data manager
+        PFQuery *query = [PFQuery queryWithClassName:@"Chats"];
+        [query whereKey:@"createdAt" equalTo:_tappedMessage.date];
+        [query whereKey:@"chatUsername" equalTo:_tappedMessage.senderId];
+        
+        __block PFObject *chat;
+
+        [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+            if (!error) {
+                // The find succeeded.
+                NSLog(@"Successfully retrieved %lu chat.", (unsigned long)objects.count);//should just be one!
+                
+                // Do something with the found objects
+//                for (PFObject *object in objects) {
+//                    NSLog(@"%@", object.objectId);
+//                }
+                chat  = [objects firstObject];//should only be one!
+                
+            } else {
+                // Log details of the failure
+                NSLog(@"Error: %@ %@", error, [error userInfo]);
+            }
+        }];
+        
+        // Get button tag number (or do whatever you need to do here, based on your object
+    
+
+        NSNumber *latitude = [chat objectForKey:@"chatLatitude"];
+        NSNumber *longitude = [chat objectForKey:@"chatLongitude"];
+        // Pass the information to your destination view
+        [vc setLatitude:latitude];
+        [vc setLongitude: longitude];
+    
+    }
+
 }
 
 /* All data given to the chat library must be of form JSQMessage. Search for it in the project or

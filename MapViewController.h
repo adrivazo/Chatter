@@ -9,5 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @interface MapViewController : UIViewController
+@property (nonatomic, weak) NSNumber *latitude;
+@property (nonatomic, weak) NSNumber *longitude;
 
 @end
