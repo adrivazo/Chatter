@@ -21,14 +21,21 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+  
+
+}
+
+-(void) updatePin{
     
     MKPointAnnotation *annotation = [[MKPointAnnotation alloc] init];
-    annotation.coordinate = CLLocationCoordinate2DMake(40, -75);
+    //annotation.coordinate = CLLocationCoordinate2DMake(40, -75);
+    
+    annotation.coordinate = CLLocationCoordinate2DMake
+    ([_latitude longValue], [_longitude longValue]);
     //should get the coordinate by doing prepare for segue?
     annotation.title = @"User location";
     annotation.subtitle = @"Here they were!";
     [self.mapView addAnnotation:annotation];
-
 }
 
 - (void)didReceiveMemoryWarning {

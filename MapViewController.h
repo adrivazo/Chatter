@@ -12,4 +12,6 @@
 @property (nonatomic, weak) NSNumber *latitude;
 @property (nonatomic, weak) NSNumber *longitude;
 
+-(void) updatePin;
+
 @end

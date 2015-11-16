@@ -118,13 +118,8 @@
     _userLongitude = [NSNumber numberWithInteger: location.coordinate.longitude];
     _userLatitude = [NSNumber numberWithInteger: location.coordinate.latitude];
     
-    
-    
-    //TODO get real location
     NSNumber *latitude = _userLatitude;//@75;
     NSNumber *longitude = _userLongitude;//@75;
-    
-    
     
     [_dataManager postMessageText:text
                          senderId:senderId
@@ -144,16 +139,10 @@
 - (void)collectionView:(JSQMessagesCollectionView *)collectionView didTapMessageBubbleAtIndexPath:(NSIndexPath *)indexPath {
     //get the latitude and longitude by querying parse with
     //sender id and created at
-    
-    
     _tappedMessage= [self.chatData objectAtIndex:indexPath.item];
 
     
       [self performSegueWithIdentifier:@"mapSegue" sender:self];
-    //force a segue
-    
- // TODO: Handle what happens when a user selects a cell. It should segue to the MapViewController and display the location
-  // Of the message sent.
 }
 
 - (void) prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender{
@@ -184,20 +173,19 @@
 //                }
                 chat  = [objects firstObject];//should only be one!
                 
+                NSNumber *latitude = [chat objectForKey:@"chatLatitude"];
+                NSNumber *longitude = [chat objectForKey:@"chatLongitude"];
+                // Pass the information to destination view
+                [vc setLatitude:latitude];
+                [vc setLongitude: longitude];
+                
+                [vc updatePin];
+                
             } else {
                 // Log details of the failure
                 NSLog(@"Error: %@ %@", error, [error userInfo]);
             }
         }];
-
-    
-
-        NSNumber *latitude = [chat objectForKey:@"chatLatitude"];
-        NSNumber *longitude = [chat objectForKey:@"chatLongitude"];
-        // Pass the information to destination view
-        [vc setLatitude:latitude];
-        [vc setLongitude: longitude];
-    
     }
 
 }
