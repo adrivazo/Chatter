@@ -12,12 +12,17 @@
 #import "ParseDataManager.h"
 #import <Parse/Parse.h>
 
-@interface ChatViewController ()
+#import <CoreLocation/CoreLocation.h>
+
+@interface ChatViewController () <CLLocationManagerDelegate>
 @property(nonatomic) NSMutableArray *chatData;
 @property (strong, nonatomic) JSQMessagesBubbleImage *outgoingBubbleImageData;
 @property (strong, nonatomic) JSQMessagesBubbleImage *incomingBubbleImageData;
 @property(nonatomic) ParseDataManager *dataManager;
 @property(nonatomic, weak) JSQMessage *tappedMessage;
+@property (nonatomic, strong) CLLocationManager *locationManager;
+@property (nonatomic, weak) NSNumber *userLatitude;
+@property (nonatomic, weak) NSNumber *userLongitude;
 @end
 
 @implementation ChatViewController
@@ -27,6 +32,7 @@
   self.dataManager = [ParseDataManager sharedManager];
   [self setupChatBubbles];
   self.chatData = [[NSMutableArray alloc]init];
+      self.locationManager = [[CLLocationManager alloc] init];
     
     //NSString *digit = [[sender titlelabel] text];
     NSLog(@"launching...");
@@ -59,6 +65,21 @@
          [self performSegueWithIdentifier:@"signupSegue" sender:self];
     }
     
+    //request for permissions
+    
+    if(!([CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedWhenInUse)
+       || !([CLLocationManager authorizationStatus] ==
+            kCLAuthorizationStatusAuthorizedAlways))
+    {
+        [self requestForPemissions];
+        
+    }
+    
+    
+}
+
+- (IBAction)requestForPemissions:(id)sender {
+    [self.locationManager requestAlwaysAuthorization];
 }
 
 //add a timer to load data every so often...
@@ -69,11 +90,17 @@
   self.collectionView.collectionViewLayout.incomingAvatarViewSize = CGSizeZero;
   self.collectionView.collectionViewLayout.outgoingAvatarViewSize = CGSizeZero;
   self.inputToolbar.contentView.leftBarButtonItem = nil;
+    
+  [self.locationManager startUpdatingLocation];
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+- (void)requestForPemissions{
+    [self.locationManager requestAlwaysAuthorization];
 }
 
 - (void)didPressSendButton:(UIButton *)button
@@ -83,9 +110,21 @@
                       date:(NSDate *)date {
     NSLog(@"Sending message %@", text);
 
+
+    
+    
+    CLLocation *location = [_locationManager location];
+    
+    _userLongitude = [NSNumber numberWithInteger: location.coordinate.longitude];
+    _userLatitude = [NSNumber numberWithInteger: location.coordinate.latitude];
+    
+    
+    
     //TODO get real location
-    NSNumber *latitude = @75;
-    NSNumber *longitude = @75;
+    NSNumber *latitude = _userLatitude;//@75;
+    NSNumber *longitude = _userLongitude;//@75;
+    
+    
     
     [_dataManager postMessageText:text
                          senderId:senderId
@@ -125,7 +164,9 @@
         // Get destination view
         MapViewController *vc = [segue destinationViewController];
         
-        //should move this to the parse data manager
+        //should move this to the parse data manager...? and perhaps trigger
+        //segue *after* fetching chat message from parse to avoid issues
+        // with callback?
         PFQuery *query = [PFQuery queryWithClassName:@"Chats"];
         [query whereKey:@"createdAt" equalTo:_tappedMessage.date];
         [query whereKey:@"chatUsername" equalTo:_tappedMessage.senderId];
@@ -148,13 +189,12 @@
                 NSLog(@"Error: %@ %@", error, [error userInfo]);
             }
         }];
-        
-        // Get button tag number (or do whatever you need to do here, based on your object
+
     
 
         NSNumber *latitude = [chat objectForKey:@"chatLatitude"];
         NSNumber *longitude = [chat objectForKey:@"chatLongitude"];
-        // Pass the information to your destination view
+        // Pass the information to destination view
         [vc setLatitude:latitude];
         [vc setLongitude: longitude];
     
@@ -179,6 +219,32 @@
       }
   }];
 }
+
+
+#pragma mark - CLLocationDelegate Methods
+
+- (void)locationManager:(CLLocationManager *)manager
+didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
+    switch (status) {
+        case kCLAuthorizationStatusAuthorizedAlways:
+        case kCLAuthorizationStatusAuthorizedWhenInUse:
+            NSLog(@"Location authorized");
+            break;
+        case kCLAuthorizationStatusDenied:
+        case kCLAuthorizationStatusNotDetermined:
+        case kCLAuthorizationStatusRestricted:
+            NSLog(@"Location Denied");
+        default:
+            break;
+    }
+}
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations {
+    CLLocation *location = [locations firstObject];
+    _userLongitude = [NSNumber numberWithInteger:location.coordinate.longitude];
+    _userLatitude = [NSNumber numberWithInteger:location.coordinate.longitude];
+}
+
 
 #pragma mark - Don't Touch this stuff...Or do, I'm a line of code, not a cop.
 
